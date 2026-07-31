@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Create Quiz</title>
+    <script src="https://telegram.org/js/telegram-web-app.js"></script>
+    <style>
+        body { font-family: sans-serif; background: #f0f2f5; padding: 15px; margin: 0; color: #333; }
+        .card { background: #fff; padding: 15px; border-radius: 12px; margin-bottom: 15px; box-shadow: 0 2px 5px rgba(0,0,0,0.05); }
+        h3 { color: #2481cc; margin-top: 0; font-size: 16px; display: flex; justify-content: space-between; align-items: center; }
+        .badge { background: #e0f2fe; color: #0369a1; padding: 3px 8px; border-radius: 6px; font-size: 12px; }
+        input[type="text"] { width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 8px; font-size: 14px; box-sizing: border-box; margin-top: 5px; }
+        .option-row { display: flex; align-items: center; margin-bottom: 10px; }
+        .option-row input { flex: 1; }
+        .btn-container { display: flex; gap: 10px; }
+        .btn { background: #2481cc; color: white; border: none; padding: 12px; border-radius: 8px; font-size: 15px; font-weight: bold; cursor: pointer; text-align: center; flex: 1; }
+        .btn-done { background: #10B981; }
+    </style>
+</head>
+<body>
+
+    <div class="card">
+        <h3>
+            <span id="q-title">Question #1</span>
+            <span class="badge" id="q-counter">Total Saved: 0</span>
+        </h3>
+        <input type="text" id="question" placeholder="Ask a question (सवाल लिखें)">
+    </div>
+
+    <div class="card">
+        <h3>Quiz Answers (पहला विकल्प सही उत्तर होगा)</h3>
+        <div class="option-row"><input type="text" class="opt" placeholder="Option 1 (Correct Answer)"></div>
+        <div class="option-row"><input type="text" class="opt" placeholder="Option 2"></div>
+        <div class="option-row"><input type="text" class="opt" placeholder="Option 3"></div>
+        <div class="option-row"><input type="text" class="opt" placeholder="Option 4"></div>
+    </div>
+
+    <div class="btn-container">
+        <button class="btn" onclick="submitQuiz(false)">Create Question</button>
+        <button class="btn btn-done" onclick="submitQuiz(true)">Finish (/done)</button>
+    </div>
+
+    <script>
+        let tg = window.Telegram.WebApp;
+        tg.expand();
+
+        let questionCount = localStorage.getItem('local_q_count') ? parseInt(localStorage.getItem('local_q_count')) : 0;
+        questionCount++;
+        document.getElementById('q-title').innerText = `Question #${questionCount}`;
+        document.getElementById('q-counter').innerText = `Total Saved: ${questionCount - 1}`;
+
+        function submitQuiz(isDone) {
+            let q = document.getElementById('question').value.trim();
+            let options = Array.from(document.querySelectorAll('.opt')).map(el => el.value.trim()).filter(val => val !== "");
+            
+            if(!q || options.length < 2) {
+                alert("Kripya Question aur kam se kam 2 Options bharein!");
+                return;
+            }
+
+            let data = {
+                question: q,
+                options: options,
+                done: isDone
+            };
+
+            tg.sendData(JSON.stringify(data));
+            
+            if(isDone) {
+                localStorage.removeItem('local_q_count');
+                tg.close();
+            } else {
+                localStorage.setItem('local_q_count', questionCount);
+                alert(`✅ Question #${questionCount} Saved Successfully! Agla question bharein.`);
+                location.reload(); // Naya question ke liye page refresh hoke number badal jayega
+            }
+        }
+    </script>
+</body>
+</html>

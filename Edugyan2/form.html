@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html lang="hi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>User Registration & Verification</title>
+    <script src="https://telegram.org/js/telegram-web-app.js"></script>
+    <style>
+        body { font-family: Arial, sans-serif; background-color: #f4f6f9; padding: 20px; margin: 0; }
+        .container { max-width: 400px; margin: auto; background: white; padding: 20px; border-radius: 10px; box-shadow: 0 4px 10px rgba(0,0,0,0.1); }
+        h2 { text-align: center; color: #333; }
+        .form-group { margin-bottom: 15px; }
+        label { display: block; margin-bottom: 5px; font-weight: bold; color: #555; }
+        input, select { width: 100%; padding: 10px; border: 1px solid #ccc; border-radius: 5px; box-sizing: border-box; }
+        button { width: 100%; padding: 12px; background-color: #28a745; color: white; border: none; border-radius: 5px; font-size: 16px; font-weight: bold; cursor: pointer; }
+        button:hover { background-color: #218838; }
+        .error-msg { color: red; font-size: 14px; text-align: center; margin-bottom: 10px; display: none; }
+    </style>
+</head>
+<body>
+<div class="container">
+    <h2>📝 User Verification</h2>
+    <div id="errorBox" class="error-msg"></div>
+    <form id="regForm" onsubmit="submitForm(event)">
+        <div class="form-group">
+            <label for="fullname">Full Name:</label>
+            <input type="text" id="fullname" placeholder="अपना पूरा नाम लिखें">
+        </div>
+        <div class="form-group">
+            <label for="mobile">Mobile Number:</label>
+            <input type="tel" id="mobile" placeholder="10 अंकों का मोबाइल नंबर">
+        </div>
+        <div class="form-group">
+            <label for="district">District:</label>
+            <input type="text" id="district" placeholder="अपना जिला लिखें">
+        </div>
+        <div class="form-group">
+            <label for="state">State:</label>
+            <input type="text" id="state" placeholder="राज्य लिखें">
+        </div>
+        <div class="form-group">
+            <label for="country">Country:</label>
+            <input type="text" id="country" value="India">
+        </div>
+        <button type="submit">Submit & Verify</button>
+    </form>
+</div>
+<script>
+    let tg = window.Telegram.WebApp;
+    tg.expand();
+
+    function submitForm(event) {
+        event.preventDefault(); // पेज को रीफ्रेश होने से रोकता है
+        
+        let fullname = document.getElementById('fullname').value.trim();
+        let mobile = document.getElementById('mobile').value.trim();
+        let district = document.getElementById('district').value.trim();
+        let state = document.getElementById('state').value.trim();
+        let country = document.getElementById('country').value.trim();
+        let errorBox = document.getElementById('errorBox');
+
+        if (!fullname || !mobile || !district || !state) {
+            errorBox.style.display = "block";
+            errorBox.innerText = "कृपया सभी जरूरी जानकारी भरें!";
+            return;
+        }
+
+        errorBox.style.display = "none";
+        let data = { 
+            verified: true, 
+            fullname: fullname, 
+            mobile: mobile, 
+            district: district, 
+            state: state, 
+            country: country 
+        };
+
+        if (tg && tg.sendData) {
+            tg.sendData(JSON.stringify(data));
+            tg.close();
+        } else {
+            alert("डेटा तैयार है! (नोट: यह तभी काम करेगा जब इसे टेलीग्राम बॉट के अंदर से खोला जाएगा)");
+        }
+    }
+</script>
+</body>
+</html>
