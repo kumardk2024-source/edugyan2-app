@@ -24,19 +24,19 @@
     <form id="regForm" onsubmit="submitForm(event)">
         <div class="form-group">
             <label for="fullname">Full Name:</label>
-            <input type="text" id="fullname" placeholder="अपना पूरा नाम लिखें">
+            <input type="text" id="fullname" placeholder="अपना पूरा नाम लिखें" required>
         </div>
         <div class="form-group">
             <label for="mobile">Mobile Number:</label>
-            <input type="tel" id="mobile" placeholder="10 अंकों का मोबाइल नंबर">
+            <input type="tel" id="mobile" placeholder="10 अंकों का मोबाइल नंबर" required>
         </div>
         <div class="form-group">
             <label for="district">District:</label>
-            <input type="text" id="district" placeholder="अपना जिला लिखें">
+            <input type="text" id="district" placeholder="अपना जिला लिखें" required>
         </div>
         <div class="form-group">
             <label for="state">State:</label>
-            <input type="text" id="state" placeholder="राज्य लिखें">
+            <input type="text" id="state" placeholder="राज्य लिखें" required>
         </div>
         <div class="form-group">
             <label for="country">Country:</label>
@@ -50,7 +50,7 @@
     tg.expand();
 
     function submitForm(event) {
-        event.preventDefault(); // पेज को रीफ्रेश होने से रोकता है
+        event.preventDefault();
         
         let fullname = document.getElementById('fullname').value.trim();
         let mobile = document.getElementById('mobile').value.trim();
@@ -65,7 +65,6 @@
             return;
         }
 
-        errorBox.style.display = "none";
         let data = { 
             verified: true, 
             fullname: fullname, 
@@ -75,11 +74,16 @@
             country: country 
         };
 
-        if (tg && tg.sendData) {
-            tg.sendData(JSON.stringify(data));
-            tg.close();
-        } else {
-            alert("डेटा तैयार है! (नोट: यह तभी काम करेगा जब इसे टेलीग्राम बॉट के अंदर से खोला जाएगा)");
+        try {
+            if (window.Telegram && window.Telegram.WebApp && tg.initDataUnsafe) {
+                tg.sendData(JSON.stringify(data));
+                tg.close();
+            } else {
+                // अगर कोई यूजर इसे सीधे ब्राउज़र में खोल रहा है (टेलीग्राम के बाहर)
+                alert("डेटा तैयार है: " + JSON.stringify(data) + "\n\n(नोट: यह सीधे टेलीग्राम बॉट के अंदर काम करता है)");
+            }
+        } catch (err) {
+            alert("डेटा भेजने में एरर: " + err.message);
         }
     }
 </script>
