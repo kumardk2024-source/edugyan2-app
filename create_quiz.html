@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<html lang="hi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Create Your Quiz Question</title>
+    <script src="https://telegram.org/js/telegram-web-app.js"></script>
+    <style>
+        body { font-family: Arial, sans-serif; background-color: #f4f6f9; padding: 20px; margin: 0; }
+        .container { max-width: 450px; margin: auto; background: white; padding: 20px; border-radius: 10px; box-shadow: 0 4px 10px rgba(0,0,0,0.1); }
+        h2 { text-align: center; color: #333; margin-top: 0; }
+        .form-group { margin-bottom: 15px; }
+        label { display: block; margin-bottom: 5px; font-weight: bold; color: #555; }
+        input[type="text"], textarea { width: 100%; padding: 10px; border: 1px solid #ccc; border-radius: 5px; box-sizing: border-box; }
+        textarea { resize: vertical; height: 70px; }
+        
+        /* Option Row Styles with Radio Button */
+        .option-row { display: flex; align-items: center; gap: 10px; margin-bottom: 10px; }
+        .option-row input[type="radio"] { width: 22px; height: 22px; cursor: pointer; accent-color: #0088cc; }
+        .option-row input[type="text"] { flex: 1; }
+
+        button { width: 100%; padding: 12px; background-color: #0088cc; color: white; border: none; border-radius: 5px; font-size: 16px; font-weight: bold; cursor: pointer; margin-top: 10px; }
+        button:hover { background-color: #006699; }
+        .error-msg { color: red; font-size: 14px; text-align: center; margin-bottom: 10px; display: none; }
+        .note { font-size: 12px; color: #666; margin-bottom: 15px; background: #eef7fc; padding: 8px; border-radius: 4px; border-left: 3px solid #0088cc; }
+    </style>
+</head>
+<body>
+<div class="container">
+    <h2>✍️ Create Quiz Question</h2>
+    <div id="errorBox" class="error-msg"></div>
+
+    <form id="quizForm" onsubmit="submitQuiz(event)">
+        <div class="form-group">
+            <label for="question">सवाल (Question):</label>
+            <textarea id="question" placeholder="अपना सवाल यहाँ लिखें..." required></textarea>
+        </div>
+
+        <div class="note">
+            💡 ऑप्शंस भरें और जो सही उत्तर हो उसके आगे के गोलाकार (Radio) बटन पर टिक करें:
+        </div>
+
+        <div class="option-row">
+            <input type="radio" name="correctOption" value="A" required title="इसे सही उत्तर चुनें">
+            <input type="text" id="optA" placeholder="Option A" required>
+        </div>
+
+        <div class="option-row">
+            <input type="radio" name="correctOption" value="B" title="इसे सही उत्तर चुनें">
+            <input type="text" id="optB" placeholder="Option B" required>
+        </div>
+
+        <div class="option-row">
+            <input type="radio" name="correctOption" value="C" title="इसे सही उत्तर चुनें">
+            <input type="text" id="optC" placeholder="Option C" required>
+        </div>
+
+        <div class="option-row">
+            <input type="radio" name="correctOption" value="D" title="इसे सही उत्तर चुनें">
+            <input type="text" id="optD" placeholder="Option D" required>
+        </div>
+
+        <button type="submit">Finish & Save Question</button>
+    </form>
+</div>
+
+<script>
+    // Telegram WebApp Safely Initialize
+    let tg = window.Telegram ? window.Telegram.WebApp : null;
+
+    if (tg) {
+        tg.ready();
+        tg.expand();
+    }
+
+    function submitQuiz(event) {
+        event.preventDefault();
+
+        let questionText = document.getElementById('question').value.trim();
+        let optA = document.getElementById('optA').value.trim();
+        let optB = document.getElementById('optB').value.trim();
+        let optC = document.getElementById('optC').value.trim();
+        let optD = document.getElementById('optD').value.trim();
+        let errorBox = document.getElementById('errorBox');
+
+        // किस Radio Button को टिक किया गया है
+        let selectedRadio = document.querySelector('input[name="correctOption"]:checked');
+
+        if (!selectedRadio) {
+            errorBox.style.display = "block";
+            errorBox.innerText = "कृपया सही उत्तर (Radio Button) पर टिक करें!";
+            return;
+        }
+
+        errorBox.style.display = "none";
+
+        // आपके bot.py के handle_web_app_data के अनुसार डेटा स्ट्रक्चर
+        let quizData = {
+            question: questionText,
+            options: [
+                `A) ${optA}`,
+                `B) ${optB}`,
+                `C) ${optC}`,
+                `D) ${optD}`
+            ],
+            correctOption: selectedRadio.value // 'A', 'B', 'C', या 'D'
+        };
+
+        try {
+            if (tg && tg.sendData) {
+                tg.sendData(JSON.stringify(quizData)); // बोट को डेटा भेजेगा
+                tg.close(); // विंडो बंद करेगा
+            } else {
+                alert("डेटा तैयार है: " + JSON.stringify(quizData) + "\n\n(नोट: यह सीधे टेलीग्राम बॉट के अंदर काम करेगा)");
+            }
+        } catch (err) {
+            errorBox.style.display = "block";
+            errorBox.innerText = "डेटा भेजने में त्रुटि: " + err.message;
+        }
+    }
+</script>
+</body>
+</html>

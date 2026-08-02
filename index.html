@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html lang="hi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>User Registration</title>
+    <script src="https://telegram.org/js/telegram-web-app.js"></script>
+    <style>
+        body { font-family: Arial, sans-serif; background: #f4f6f9; padding: 15px; margin: 0; }
+        .card { background: white; padding: 20px; border-radius: 10px; box-shadow: 0 2px 8px rgba(0,0,0,0.1); }
+        h2 { text-align: center; color: #333; margin-top: 0; }
+        .group { margin-bottom: 12px; }
+        label { display: block; font-weight: bold; margin-bottom: 5px; color: #555; }
+        input { width: 100%; padding: 10px; border: 1px solid #ccc; border-radius: 5px; box-sizing: border-box; }
+        button { width: 100%; padding: 12px; background: #28a745; color: white; border: none; border-radius: 5px; font-weight: bold; cursor: pointer; font-size: 16px; margin-top: 10px; }
+        .captcha { background: #e9ecef; padding: 10px; text-align: center; font-weight: bold; letter-spacing: 3px; border-radius: 5px; margin-bottom: 5px; }
+    </style>
+</head>
+<body>
+<div class="card">
+    <h2>📝 यूजर रजिस्ट्रेशन</h2>
+    <form id="regForm" onsubmit="processForm(event)">
+        <div class="group">
+            <label>पूरा नाम:</label>
+            <input type="text" id="fullname" placeholder="अपना नाम दर्ज करें" required>
+        </div>
+        <div class="group">
+            <label>मोबाइल नंबर:</label>
+            <input type="tel" id="mobile" pattern="[0-9]{10}" placeholder="10 अंकों का नंबर" required>
+        </div>
+        <div class="group">
+            <label>ज़िला:</label>
+            <input type="text" id="district" placeholder="जिला लिखें" required>
+        </div>
+        <div class="group">
+            <label>राज्य:</label>
+            <input type="text" id="state" placeholder="राज्य लिखें" required>
+        </div>
+        <div class="group">
+            <label>देश:</label>
+            <input type="text" id="country" value="India" required>
+        </div>
+        
+        <div class="group">
+            <label>Anti-Robot चेक:</label>
+            <div id="captchaText" class="captcha"></div>
+            <input type="text" id="captchaInput" placeholder="ऊपर दिया कोड यहाँ लिखें" required>
+        </div>
+
+        <button type="submit" id="subBtn">सबमिट करें</button>
+    </form>
+</div>
+
+<script>
+    let tg = window.Telegram ? window.Telegram.WebApp : null;
+    if (tg) { tg.ready(); tg.expand(); }
+
+    let generatedCaptcha = "";
+
+    function generateCaptcha() {
+        generatedCaptcha = Math.random().toString(36).substring(2, 7).toUpperCase();
+        document.getElementById("captchaText").innerText = generatedCaptcha;
+    }
+
+    function processForm(e) {
+        e.preventDefault();
+        
+        let userCaptcha = document.getElementById("captchaInput").value.trim().toUpperCase();
+        if (userCaptcha !== generatedCaptcha) {
+            alert("❌ एंटी-रोबोट कोड गलत है! कृपया पुनः प्रयास करें।");
+            generateCaptcha();
+            return;
+        }
+
+        let payload = {
+            type: "registration",
+            fullname: document.getElementById("fullname").value.trim(),
+            mobile: document.getElementById("mobile").value.trim(),
+            district: document.getElementById("district").value.trim(),
+            state: document.getElementById("state").value.trim(),
+            country: document.getElementById("country").value.trim()
+        };
+
+        if (tg && tg.sendData) {
+            tg.sendData(JSON.stringify(payload));
+            tg.close();
+        } else {
+            alert("यह ऐप केवल टेलीग्राम बॉट के अंदर काम करता है!");
+        }
+    }
+
+    window.onload = generateCaptcha;
+</script>
+</body>
+</html>
