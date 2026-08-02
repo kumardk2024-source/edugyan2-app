@@ -1,81 +1,95 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="hi">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Create Quiz</title>
+    <title>User Registration</title>
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
     <style>
-        body { font-family: sans-serif; background: #f0f2f5; padding: 15px; margin: 0; color: #333; }
-        .card { background: #fff; padding: 15px; border-radius: 12px; margin-bottom: 15px; box-shadow: 0 2px 5px rgba(0,0,0,0.05); }
-        h3 { color: #2481cc; margin-top: 0; font-size: 16px; display: flex; justify-content: space-between; align-items: center; }
-        .badge { background: #e0f2fe; color: #0369a1; padding: 3px 8px; border-radius: 6px; font-size: 12px; }
-        input[type="text"] { width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 8px; font-size: 14px; box-sizing: border-box; margin-top: 5px; }
-        .option-row { display: flex; align-items: center; margin-bottom: 10px; }
-        .option-row input { flex: 1; }
-        .btn-container { display: flex; gap: 10px; }
-        .btn { background: #2481cc; color: white; border: none; padding: 12px; border-radius: 8px; font-size: 15px; font-weight: bold; cursor: pointer; text-align: center; flex: 1; }
-        .btn-done { background: #10B981; }
+        body { font-family: Arial, sans-serif; background: #f4f6f9; padding: 15px; margin: 0; }
+        .card { background: white; padding: 20px; border-radius: 10px; box-shadow: 0 2px 8px rgba(0,0,0,0.1); }
+        h2 { text-align: center; color: #333; margin-top: 0; }
+        .group { margin-bottom: 12px; }
+        label { display: block; font-weight: bold; margin-bottom: 5px; color: #555; }
+        input { width: 100%; padding: 10px; border: 1px solid #ccc; border-radius: 5px; box-sizing: border-box; }
+        button { width: 100%; padding: 12px; background: #28a745; color: white; border: none; border-radius: 5px; font-weight: bold; cursor: pointer; font-size: 16px; margin-top: 10px; }
+        .captcha { background: #e9ecef; padding: 10px; text-align: center; font-weight: bold; letter-spacing: 3px; border-radius: 5px; margin-bottom: 5px; }
     </style>
 </head>
 <body>
+<div class="card">
+    <h2>📝 यूजर रजिस्ट्रेशन</h2>
+    <form id="regForm" onsubmit="processForm(event)">
+        <div class="group">
+            <label>पूरा नाम:</label>
+            <input type="text" id="fullname" placeholder="अपना नाम दर्ज करें" required>
+        </div>
+        <div class="group">
+            <label>मोबाइल नंबर:</label>
+            <input type="tel" id="mobile" pattern="[0-9]{10}" placeholder="10 अंकों का नंबर" required>
+        </div>
+        <div class="group">
+            <label>ज़िला:</label>
+            <input type="text" id="district" placeholder="जिला लिखें" required>
+        </div>
+        <div class="group">
+            <label>राज्य:</label>
+            <input type="text" id="state" placeholder="राज्य लिखें" required>
+        </div>
+        <div class="group">
+            <label>देश:</label>
+            <input type="text" id="country" value="India" required>
+        </div>
+        
+        <div class="group">
+            <label>Anti-Robot चेक:</label>
+            <div id="captchaText" class="captcha"></div>
+            <input type="text" id="captchaInput" placeholder="ऊपर दिया कोड यहाँ लिखें" required>
+        </div>
 
-    <div class="card">
-        <h3>
-            <span id="q-title">Question #1</span>
-            <span class="badge" id="q-counter">Total Saved: 0</span>
-        </h3>
-        <input type="text" id="question" placeholder="Ask a question (सवाल लिखें)">
-    </div>
+        <button type="submit" id="subBtn">सबमिट करें</button>
+    </form>
+</div>
 
-    <div class="card">
-        <h3>Quiz Answers (पहला विकल्प सही उत्तर होगा)</h3>
-        <div class="option-row"><input type="text" class="opt" placeholder="Option 1 (Correct Answer)"></div>
-        <div class="option-row"><input type="text" class="opt" placeholder="Option 2"></div>
-        <div class="option-row"><input type="text" class="opt" placeholder="Option 3"></div>
-        <div class="option-row"><input type="text" class="opt" placeholder="Option 4"></div>
-    </div>
+<script>
+    let tg = window.Telegram ? window.Telegram.WebApp : null;
+    if (tg) { tg.ready(); tg.expand(); }
 
-    <div class="btn-container">
-        <button class="btn" onclick="submitQuiz(false)">Create Question</button>
-        <button class="btn btn-done" onclick="submitQuiz(true)">Finish (/done)</button>
-    </div>
+    let generatedCaptcha = "";
 
-    <script>
-        let tg = window.Telegram.WebApp;
-        tg.expand();
+    function generateCaptcha() {
+        generatedCaptcha = Math.random().toString(36).substring(2, 7).toUpperCase();
+        document.getElementById("captchaText").innerText = generatedCaptcha;
+    }
 
-        let questionCount = localStorage.getItem('local_q_count') ? parseInt(localStorage.getItem('local_q_count')) : 0;
-        questionCount++;
-        document.getElementById('q-title').innerText = `Question #${questionCount}`;
-        document.getElementById('q-counter').innerText = `Total Saved: ${questionCount - 1}`;
-
-        function submitQuiz(isDone) {
-            let q = document.getElementById('question').value.trim();
-            let options = Array.from(document.querySelectorAll('.opt')).map(el => el.value.trim()).filter(val => val !== "");
-            
-            if(!q || options.length < 2) {
-                alert("Kripya Question aur kam se kam 2 Options bharein!");
-                return;
-            }
-
-            let data = {
-                question: q,
-                options: options,
-                done: isDone
-            };
-
-            tg.sendData(JSON.stringify(data));
-            
-            if(isDone) {
-                localStorage.removeItem('local_q_count');
-                tg.close();
-            } else {
-                localStorage.setItem('local_q_count', questionCount);
-                alert(`✅ Question #${questionCount} Saved Successfully! Agla question bharein.`);
-                location.reload(); // Naya question ke liye page refresh hoke number badal jayega
-            }
+    function processForm(e) {
+        e.preventDefault();
+        
+        let userCaptcha = document.getElementById("captchaInput").value.trim().toUpperCase();
+        if (userCaptcha !== generatedCaptcha) {
+            alert("❌ एंटी-रोबोट कोड गलत है! कृपया पुनः प्रयास करें।");
+            generateCaptcha();
+            return;
         }
-    </script>
+
+        let payload = {
+            type: "registration",
+            fullname: document.getElementById("fullname").value.trim(),
+            mobile: document.getElementById("mobile").value.trim(),
+            district: document.getElementById("district").value.trim(),
+            state: document.getElementById("state").value.trim(),
+            country: document.getElementById("country").value.trim()
+        };
+
+        if (tg && tg.sendData) {
+            tg.sendData(JSON.stringify(payload));
+            tg.close();
+        } else {
+            alert("यह ऐप केवल टेलीग्राम बॉट के अंदर काम करता है!");
+        }
+    }
+
+    window.onload = generateCaptcha;
+</script>
 </body>
 </html>
